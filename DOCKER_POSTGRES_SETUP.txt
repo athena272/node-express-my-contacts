@@ -1,0 +1,210 @@
+=============================================================================
+GUIA PASSO A PASSO: SUBIR IMAGEM DOCKER POSTGRES PARA O PROJETO
+=============================================================================
+
+PRÉ-REQUISITOS:
+- Docker Desktop instalado e rodando no Windows
+- Node.js e npm/yarn instalados
+
+=============================================================================
+PASSO 1: BAIXAR E RODAR A IMAGEM DO POSTGRES
+=============================================================================
+
+1.1. Abra o PowerShell ou CMD como administrador
+
+1.2. Execute o seguinte comando para baixar e rodar o container PostgreSQL:
+
+    docker run --name postgres-mycontacts -e POSTGRES_PASSWORD=root -e POSTGRES_USER=root -e POSTGRES_DB=mycontacts -p 5432:5432 -d postgres:latest
+
+    Explicação dos parâmetros:
+    - --name postgres-mycontacts: Define o nome do container
+    - -e POSTGRES_PASSWORD=root: Define a senha do usuário root
+    - -e POSTGRES_USER=root: Define o usuário como root
+    - -e POSTGRES_DB=mycontacts: Cria o banco de dados "mycontacts" automaticamente
+    - -p 5432:5432: Mapeia a porta 5432 do container para a porta 5432 do host
+    - -d: Roda o container em modo detached (em background)
+    - postgres:latest: Usa a versão mais recente do PostgreSQL
+
+1.3. Verifique se o container está rodando:
+
+    docker ps
+
+    Você deve ver o container "postgres-mycontacts" na lista
+
+=============================================================================
+PASSO 2: VERIFICAR CONECTIVIDADE (OPCIONAL)
+=============================================================================
+
+2.1. Teste a conexão executando um comando dentro do container:
+
+    docker exec -it postgres-mycontacts psql -U root -d mycontacts
+
+2.2. Se conectou com sucesso, você verá o prompt do psql. Digite:
+
+    \dt
+
+    (para listar as tabelas - inicialmente vazio)
+
+    \q
+
+    (para sair)
+
+=============================================================================
+PASSO 3: CRIAR AS TABELAS DO BANCO DE DADOS
+=============================================================================
+
+Você tem 3 opções para criar as tabelas:
+
+OPÇÃO A - Usando docker exec (RECOMENDADO):
+-------------------------------------------
+3.1. Execute o arquivo schema.sql diretamente no container:
+
+    docker exec -i postgres-mycontacts psql -U root -d mycontacts < src/database/schema.sql
+
+3.2. Verifique se as tabelas foram criadas:
+
+    docker exec -it postgres-mycontacts psql -U root -d mycontacts -c "\dt"
+
+    Você deve ver duas tabelas: categories e contacts
+
+OPÇÃO B - Copiando o arquivo para o container:
+-----------------------------------------------
+3.1. Copie o arquivo schema.sql para dentro do container:
+
+    docker cp src/database/schema.sql postgres-mycontacts:/tmp/schema.sql
+
+3.2. Execute o script dentro do container:
+
+    docker exec -i postgres-mycontacts psql -U root -d mycontacts -f /tmp/schema.sql
+
+OPÇÃO C - Entrando interativamente no container:
+------------------------------------------------
+3.1. Entre no container:
+
+    docker exec -it postgres-mycontacts psql -U root -d mycontacts
+
+3.2. Cole o conteúdo do arquivo schema.sql linha por linha ou:
+
+    \i /tmp/schema.sql
+
+    (após copiar o arquivo usando a Opção B, passo 3.1)
+
+=============================================================================
+PASSO 4: VERIFICAR SE AS TABELAS FORAM CRIADAS
+=============================================================================
+
+4.1. Execute o seguinte comando:
+
+    docker exec -it postgres-mycontacts psql -U root -d mycontacts -c "\d categories"
+
+    docker exec -it postgres-mycontacts psql -U root -d mycontacts -c "\d contacts"
+
+4.2. Você deve ver a estrutura das tabelas com suas colunas e tipos
+
+=============================================================================
+PASSO 5: CONFIGURAR E RODAR O PROJETO NODE.JS
+=============================================================================
+
+5.1. Instale as dependências (se ainda não fez):
+
+    npm install
+    ou
+    yarn install
+
+5.2. Verifique se o arquivo src/database/index.js está configurado corretamente:
+    - host: 'localhost'
+    - port: 5432
+    - user: 'root'
+    - password: 'root'
+    - database: 'mycontacts'
+
+5.3. Inicie o servidor:
+
+    npm run dev
+    ou
+    yarn dev
+
+5.4. Você deve ver a mensagem: "🔥 Connected to database 🔥"
+    E depois: "🔥 Server on fire 🔥 at http://localhost:3000"
+
+=============================================================================
+COMANDOS ÚTEIS PARA GERENCIAR O CONTAINER
+=============================================================================
+
+PARAR o container:
+    docker stop postgres-mycontacts
+
+INICIAR o container (se já existe):
+    docker start postgres-mycontacts
+
+REINICIAR o container:
+    docker restart postgres-mycontacts
+
+VER LOGS do container:
+    docker logs postgres-mycontacts
+
+REMOVER o container (CUIDADO: apaga todos os dados):
+    docker stop postgres-mycontacts
+    docker rm postgres-mycontacts
+
+LISTAR todos os containers (incluindo parados):
+    docker ps -a
+
+=============================================================================
+ESTRUTURA DO SCHEMA.SQL
+=============================================================================
+
+O arquivo schema.sql cria:
+
+1. DATABASE: mycontacts
+   - Cria o banco de dados (já criado automaticamente pelo Docker)
+
+2. EXTENSION: uuid-ossp
+   - Permite gerar UUIDs automaticamente
+
+3. TABELA: categories
+   - id: UUID (chave primária, gerado automaticamente)
+   - name: VARCHAR (nome da categoria)
+
+4. TABELA: contacts
+   - id: UUID (chave primária, gerado automaticamente)
+   - name: VARCHAR (nome do contato)
+   - email: VARCHAR UNIQUE (email único)
+   - phone: VARCHAR (telefone)
+   - category_id: UUID (chave estrangeira referenciando categories.id)
+
+A relação é: Um contato pode ter uma categoria (category_id pode ser NULL)
+
+=============================================================================
+RESOLUÇÃO DE PROBLEMAS COMUNS
+=============================================================================
+
+ERRO: "port 5432 is already allocated"
+SOLUÇÃO: Outro PostgreSQL está rodando na porta 5432
+- Use outra porta: -p 5433:5432 (e atualize src/database/index.js)
+- Ou pare o PostgreSQL local que está rodando
+
+ERRO: "password authentication failed"
+SOLUÇÃO: Verifique se as credenciais em src/database/index.js
+         correspondem às definidas no comando docker run
+
+ERRO: "database does not exist"
+SOLUÇÃO: Execute o schema.sql novamente ou verifique se o
+         banco foi criado corretamente
+
+ERRO: "could not connect to server"
+SOLUÇÃO: Verifique se o container está rodando: docker ps
+         Se não estiver: docker start postgres-mycontacts
+
+=============================================================================
+OBSERVAÇÕES IMPORTANTES
+=============================================================================
+
+⚠️ Os dados no container serão perdidos se você remover o container
+   Para persistir dados, use volumes do Docker (pesquise sobre docker volumes)
+
+⚠️ As credenciais usadas (root/root) são apenas para desenvolvimento
+   Em produção, use credenciais seguras e variáveis de ambiente
+
+=============================================================================
+
