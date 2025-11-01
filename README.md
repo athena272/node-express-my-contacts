@@ -459,7 +459,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👤 Autor
 
-athena272
+Guilherme R. Alves
 
 ## 🤝 Contribuindo
 
