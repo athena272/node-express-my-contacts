@@ -1,4 +1,4 @@
-const { Client } = require('pg')
+const { Client } = require('pg');
 
 const client = new Client({
   host: 'localhost',
@@ -6,15 +6,15 @@ const client = new Client({
   user: 'root',
   password: 'root',
   database: 'mycontacts',
-})
+});
 
 client.connect()
   .then(() => console.log('🔥 Connected to database 🔥'))
-  .catch((err) => console.log('💀 Error connecting to database', err))
+  .catch((err) => console.log('💀 Error connecting to database', err));
 
 exports.query = async (query, values) => {
-  const { rows } = await client.query(query, values)
-  return rows
-}
+  const { rows } = await client.query(query, values);
+  return rows;
+};
 
 // client.query('SELECT * FROM contacts').then(result => console.log(result))

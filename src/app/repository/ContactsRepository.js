@@ -1,4 +1,4 @@
-const db = require('../../database/index.js')
+const db = require('../../database/index.js');
 
 class ContactsRepository {
   async findAll(orderBy = 'ASC') {
@@ -9,7 +9,7 @@ class ContactsRepository {
       LEFT JOIN categories ON categories.id = contacts.category_id
       ORDER BY contacts.name ${direction}
     `);
-    return rows
+    return rows;
   }
 
   async findById(id) {
@@ -18,18 +18,18 @@ class ContactsRepository {
       FROM contacts
       LEFT JOIN categories ON categories.id = contacts.category_id
       WHERE contacts.id = $1
-    `, [id])
-    return row
+    `, [id]);
+    return row;
   }
 
   async findByEmail(email) {
-    const [row] = await db.query('SELECT * FROM contacts WHERE email = $1', [email])
-    return row
+    const [row] = await db.query('SELECT * FROM contacts WHERE email = $1', [email]);
+    return row;
   }
 
   async delete(id) {
-    const deleteOperation = await db.query('DELETE FROM contacts WHERE id = $1', [id])
-    return deleteOperation
+    const deleteOperation = await db.query('DELETE FROM contacts WHERE id = $1', [id]);
+    return deleteOperation;
   }
 
   async create({ name, email, phone, category_id }) {
@@ -37,9 +37,9 @@ class ContactsRepository {
       INSERT INTO contacts(name, email, phone, category_id)
       VALUES($1, $2, $3, $4)
       RETURNING *
-    `, [name, email, phone, category_id])
+    `, [name, email, phone, category_id]);
 
-    return row
+    return row;
   }
 
   async updateContact(id, { name, email, phone, category_id }) {
@@ -48,9 +48,9 @@ class ContactsRepository {
       SET name = $1, email = $2, phone = $3, category_id = $4
       WHERE id = $5
       RETURNING *
-    `, [name, email, phone, category_id, id])
-    return row
+    `, [name, email, phone, category_id, id]);
+    return row;
   }
 }
 
-module.exports = new ContactsRepository()
+module.exports = new ContactsRepository();
