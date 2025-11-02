@@ -14,9 +14,11 @@
     "pg": "^8.10.0"
   },
   "devDependencies": {
-    "eslint": "^7.32.0 || ^8.2.0",
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.25.2",
+    "globals": "^16.5.0",
     "nodemon": "^2.0.22"
   }
 }
