@@ -57,3 +57,5 @@ psql -U root
 \c mycontacts
 
 \dt
+
+yarn add express-async-errors
